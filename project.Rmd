@@ -1,0 +1,90 @@
+#Project
+
+
+## Cleaning the data
+
+Loading necessary libraries and the data.
+```{r load,cache=TRUE,echo=TRUE}
+library(caret)
+library(AppliedPredictiveModeling)
+set.seed(5)
+dataTesting<-read.csv('pml-testing.csv')
+dataTraining<-read.csv('pml-training.csv')
+
+```
+
+
+I split the training data into two parts for training and testing with the ratio of 3:1.
+```{r split,cache=TRUE,echo=TRUE}
+inTrain=createDataPartition(dataTraining$classe, p=3/4)[[1]]
+training=dataTraining[inTrain,]
+testing=dataTraining[-inTrain,]
+```
+
+
+Let's see the dimensions of the training set:
+```{r dim1,cache=TRUE,echo=TRUE}
+dim(training)
+```
+
+Then I check, how many NAs there are in the data:
+```{r nacheck,cache=TRUE,echo=TRUE}
+na_test = sapply(dataTesting, function(x) {sum(is.na(x))})
+table(na_test)
+```
+
+Looks like there are many columns that contains mostly NAs especially in the final testing set. I'm getting rid of these columns from both the training and the test set.
+
+```{r naelim,cache=TRUE,echo=TRUE}
+bad_columns = names(na_test[na_test==max(na_test)])
+training = training[, !names(training) %in% bad_columns]
+testing = testing[, !names(testing) %in% bad_columns]
+dataTesting = dataTesting[, !names(dataTesting) %in% bad_columns]
+```
+
+
+Let's check, what columns are left in the training set:
+```{r dim2,cache=TRUE,echo=TRUE}
+colnames(training)
+```
+
+For the training I won't use the columns X, user names, and the timestamps, so I remove these columns from both the training and the test set:
+```{r elim,cache=TRUE,echo=TRUE}
+training<-subset(training[,8:60])
+testing<-subset(testing[,8:60])
+dataTesting<-subset(dataTesting[,8:60])
+dim(training)
+```
+So in the end there are 52 variables left plus the classifications.
+
+## Preprocessing and modell building
+
+I run PCA to with the treshold of 0.90 to produce the variables to the fitting??? and apply it to the training and test sets.
+```{r preproc,cache=TRUE,echo=TRUE}
+preProc<-preProcess(training[,1:52],method="pca",thresh=0.90)
+trainPC<-cbind(classe=training[,53],predict(preProc,training[,1:52]))
+testPC<-cbind(classe=testing[,53],predict(preProc,testing[,1:52]))
+dataTestingPC<-cbind(classe=dataTesting[,53],predict(preProc,dataTesting[,1:52]))
+```
+
+Building the model using random forest method:
+
+```{r modelling,cache=TRUE,echo=TRUE}
+fitControl <- trainControl(method = "repeatedcv",number = 10,repeats = 10)
+fitRF<-train(trainPC[,2:ncol(trainPC)],trainPC[,1],method="rf",trControl=fitControl)
+fitRF
+```
+
+Applying the model and compare the results using the test set:
+```{r matric,cache=TRUE,echo=TRUE}
+confusionMatrix(testPC$classe,predict(fitRF,testPC))
+```
+
+## Out of sample error
+
+```{r err,cache=TRUE,echo=TRUE}
+accuracy <- postResample(testPC$classe, predict(fitRF,testPC))[[1]]
+error<-1-accuracy
+```
+The out of sample error is `r error*100.0`.
+
