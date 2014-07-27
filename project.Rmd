@@ -1,4 +1,4 @@
-#Project
+#Practical machine learning course project
 
 
 ## Cleaning the data

@@ -53,13 +53,15 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 
 
-<div id="project" class="section level1">
-<h1>Project</h1>
+<div id="practical-machine-learning-course-project" class="section level1">
+<h1>Practical machine learning course project</h1>
 <div id="cleaning-the-data" class="section level2">
 <h2>Cleaning the data</h2>
 <p>Loading necessary libraries and the data.</p>
-<pre class="r"><code>library(caret)
-library(AppliedPredictiveModeling)
+<pre class="r"><code>library(caret)</code></pre>
+<pre><code>## Loading required package: lattice
+## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>library(AppliedPredictiveModeling)
 set.seed(5)
 dataTesting&lt;-read.csv('pml-testing.csv')
 dataTraining&lt;-read.csv('pml-training.csv')</code></pre>
@@ -183,7 +185,7 @@ fitRF&lt;-train(trainPC[,2:ncol(trainPC)],trainPC[,1],method=&quot;rf&quot;,trCo
 <h2>Out of sample error</h2>
 <pre class="r"><code>accuracy &lt;- postResample(testPC$classe, predict(fitRF,testPC))[[1]]
 error&lt;-1-accuracy</code></pre>
-<p>The out of sample error is .</p>
+<p>The out of sample error is 2.2838.</p>
 </div>
 </div>
 
